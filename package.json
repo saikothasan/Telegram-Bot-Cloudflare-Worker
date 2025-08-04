@@ -39,16 +39,16 @@
     "edge",
     "telegram-bot-api"
   ],
-  "author": "Manus AI <contact@manus.ai>",
+  "author": "Saikothasan <saikothouse@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/manus-ai/telegram-bot-cloudflare-worker.git"
+    "url": "https://github.com/saikothasan/Telegram-Bot-Cloudflare-Worker.git"
   },
   "bugs": {
-    "url": "https://github.com/manus-ai/telegram-bot-cloudflare-worker/issues"
+    "url": "https://github.com/saikothasan/Telegram-Bot-Cloudflare-Worker/issues"
   },
-  "homepage": "https://github.com/manus-ai/telegram-bot-cloudflare-worker#readme",
+  "homepage": "https://github.com/saikothasan/Telegram-Bot-Cloudflare-Worker#readme",
   "engines": {
     "node": ">=18.0.0"
   },
