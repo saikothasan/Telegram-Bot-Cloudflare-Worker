@@ -1,0 +1,31 @@
+{
+  "name": "telegram-bot-basic-example",
+  "version": "1.0.0",
+  "description": "Basic Telegram bot example using telegram-bot-cloudflare-worker",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc",
+    "setup": "wrangler secret put TELEGRAM_BOT_TOKEN && echo 'Visit your worker URL + /setup to configure webhook'",
+    "logs": "wrangler tail"
+  },
+  "dependencies": {
+    "telegram-bot-cloudflare-worker": "^1.0.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240117.0",
+    "typescript": "^5.3.3",
+    "wrangler": "^3.24.0"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "cloudflare",
+    "workers",
+    "typescript"
+  ],
+  "author": "Manus AI",
+  "license": "MIT"
+}
+

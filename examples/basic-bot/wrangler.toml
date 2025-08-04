@@ -1,0 +1,36 @@
+name = "telegram-bot-basic-example"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+# Public environment variables
+TELEGRAM_API_URL = "https://api.telegram.org"
+
+# Secrets (set using: wrangler secret put TELEGRAM_BOT_TOKEN)
+# TELEGRAM_BOT_TOKEN = "your_bot_token_here"
+# TELEGRAM_WEBHOOK_SECRET = "your_webhook_secret_here"
+
+# KV Namespaces (optional for this basic example)
+# [[kv_namespaces]]
+# binding = "BOT_STATE"
+# id = "your_kv_namespace_id"
+# preview_id = "your_preview_kv_namespace_id"
+
+# Durable Objects (not used in this basic example)
+# [durable_objects]
+# bindings = [
+#   { name = "USER_SESSIONS", class_name = "UserSession" }
+# ]
+
+# Build configuration
+[build]
+command = "npm run build"
+
+# Development configuration
+[env.development]
+name = "telegram-bot-basic-example-dev"
+
+# Production configuration  
+[env.production]
+name = "telegram-bot-basic-example-prod"
+
