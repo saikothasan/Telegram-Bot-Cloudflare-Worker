@@ -646,10 +646,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- 📖 [Documentation](https://github.com/your-repo/docs)
-- 🐛 [Issue Tracker](https://github.com/your-repo/issues)
-- 💬 [Discussions](https://github.com/your-repo/discussions)
-- 📧 [Email Support](mailto:support@example.com)
+- 📖 [Documentation](https://github.com/saikothasan/Telegram-Bot-Cloudflare-Worker/tree/main/docs)
+- 🐛 [Issue Tracker](https://github.com/saikothasan/Telegram-Bot-Cloudflare-Worker/issues)
+- 💬 [Discussions](https://github.com/saikothasan/Telegram-Bot-Cloudflare-Worker/discussions)
+- 📧 [Email Support](mailto:saikothouse@gmail.com)
 
 ## Changelog
 
@@ -657,5 +657,5 @@ See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
 
 ---
 
-Made with ❤️ by [Manus AI](https://github.com/manus-ai)
+Made with ❤️ by [saikothasan](https://github.com/saikothasan)
 
