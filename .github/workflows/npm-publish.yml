@@ -1,0 +1,172 @@
+name: Release
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - patch
+        - minor
+        - major
+        - prerelease
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20.x'
+        cache: 'npm'
+        registry-url: 'https://registry.npmjs.org'
+        
+    - name: Configure Git
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Run tests
+      run: npm run test
+      
+    - name: Run linting
+      run: npm run lint
+      
+    - name: Run type checking
+      run: npm run type-check
+      
+    - name: Build package
+      run: npm run build
+      
+    - name: Determine version bump
+      id: version
+      run: |
+        if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+          echo "bump=${{ github.event.inputs.release_type }}" >> $GITHUB_OUTPUT
+        else
+          # Auto-determine version bump based on commit messages
+          if git log --format=%B -n 1 ${{ github.sha }} | grep -q "BREAKING CHANGE\|!:"; then
+            echo "bump=major" >> $GITHUB_OUTPUT
+          elif git log --format=%B -n 1 ${{ github.sha }} | grep -q "^feat"; then
+            echo "bump=minor" >> $GITHUB_OUTPUT
+          else
+            echo "bump=patch" >> $GITHUB_OUTPUT
+          fi
+        fi
+        
+    - name: Bump version
+      id: bump
+      run: |
+        OLD_VERSION=$(node -p "require('./package.json').version")
+        npm version ${{ steps.version.outputs.bump }} --no-git-tag-version
+        NEW_VERSION=$(node -p "require('./package.json').version")
+        echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+        echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+        
+    - name: Update changelog
+      run: |
+        # Create or update CHANGELOG.md
+        if [ ! -f CHANGELOG.md ]; then
+          echo "# Changelog" > CHANGELOG.md
+          echo "" >> CHANGELOG.md
+        fi
+        
+        # Add new version entry
+        sed -i "2i\\## [${{ steps.bump.outputs.new_version }}] - $(date +%Y-%m-%d)\\n" CHANGELOG.md
+        
+        # Add commit messages since last tag
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        if [ -n "$LAST_TAG" ]; then
+          git log $LAST_TAG..HEAD --pretty=format:"- %s" >> temp_changes.txt
+        else
+          git log --pretty=format:"- %s" >> temp_changes.txt
+        fi
+        
+        # Insert changes into changelog
+        sed -i "/## \[${{ steps.bump.outputs.new_version }}\]/r temp_changes.txt" CHANGELOG.md
+        sed -i "/## \[${{ steps.bump.outputs.new_version }}\]/a\\" CHANGELOG.md
+        rm -f temp_changes.txt
+        
+    - name: Commit version bump
+      run: |
+        git add package.json package-lock.json CHANGELOG.md
+        git commit -m "chore: bump version to ${{ steps.bump.outputs.new_version }} [skip ci]"
+        git tag -a "v${{ steps.bump.outputs.new_version }}" -m "Release v${{ steps.bump.outputs.new_version }}"
+        
+    - name: Push changes
+      run: |
+        git push origin main
+        git push origin "v${{ steps.bump.outputs.new_version }}"
+        
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.bump.outputs.new_version }}
+        release_name: Release v${{ steps.bump.outputs.new_version }}
+        body: |
+          ## Changes in v${{ steps.bump.outputs.new_version }}
+          
+          ### What's Changed
+          See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for detailed changes.
+          
+          ### Installation
+          ```bash
+          npm install telegram-bot-cloudflare-worker@${{ steps.bump.outputs.new_version }}
+          ```
+          
+          ### Full Changelog
+          https://github.com/${{ github.repository }}/compare/v${{ steps.bump.outputs.old_version }}...v${{ steps.bump.outputs.new_version }}
+        draft: false
+        prerelease: ${{ contains(steps.bump.outputs.new_version, '-') }}
+        
+    - name: Publish to NPM
+      run: npm publish --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        
+    - name: Update package-lock.json
+      run: |
+        npm install --package-lock-only
+        git add package-lock.json
+        git commit -m "chore: update package-lock.json [skip ci]" || true
+        git push origin main || true
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: release
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.release.result == 'success'
+      run: |
+        echo "✅ Release completed successfully!"
+        echo "📦 Package published to NPM"
+        echo "🏷️ GitHub release created"
+        
+    - name: Notify failure
+      if: needs.release.result == 'failure'
+      run: |
+        echo "❌ Release failed!"
+        echo "Please check the logs and try again."
+        exit 1
+
